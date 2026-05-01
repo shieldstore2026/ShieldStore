@@ -17,16 +17,26 @@ function getTransporter() {
     return null;
   }
 
-  transporter = nodemailer.createTransport(
-    service
-      ? { service, auth: { user, pass } }
-      : {
-          host,
-          port,
-          secure: port === 465,
-          auth: { user, pass },
-        }
-  );
+  /** Nodemailer’s `service: gmail` preset uses port 465; many clouds (Render) route IPv6 there and hit ENETUNREACH. Prefer 587 + STARTTLS. */
+  const isGmail = service.toLowerCase() === 'gmail' || host === 'smtp.gmail.com';
+  if (isGmail && user && pass) {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: { user, pass },
+    });
+  } else if (service) {
+    transporter = nodemailer.createTransport({ service, auth: { user, pass } });
+  } else {
+    transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+  }
   return transporter;
 }
 

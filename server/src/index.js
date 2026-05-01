@@ -1,3 +1,7 @@
+import dns from 'dns';
+/** Avoid ENETUNREACH on IPv6-only SMTP targets (e.g. Gmail) when the host has no outbound IPv6. */
+if (typeof dns.setDefaultResultOrder === 'function') dns.setDefaultResultOrder('ipv4first');
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
