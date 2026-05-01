@@ -9,21 +9,29 @@ function getTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const service = process.env.SMTP_SERVICE;
-  if (!user || !pass || (!host && !service)) return null;
+  if (!user || !pass || (!host && !service)) {
+    console.warn(
+      '[mailer] SMTP disabled: set SMTP_USER, SMTP_PASS, and either SMTP_SERVICE (e.g. gmail) or SMTP_HOST + SMTP_PORT'
+    );
+    return null;
+  }
 
-  transporter = nodemailer.createTransport(service ? { service, auth: { user, pass } } : {
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
+  transporter = nodemailer.createTransport(
+    service
+      ? { service, auth: { user, pass: pass.replace(/\s+/g, '') } }
+      : {
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass: pass.replace(/\s+/g, '') },
+        }
+  );
   return transporter;
 }
 
 export async function sendMail({ to, subject, html, text }) {
   const tx = getTransporter();
   if (!tx) {
-    console.warn('Email skipped: SMTP not configured');
     return false;
   }
   await tx.sendMail({
