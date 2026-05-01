@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { formatPrice } from '../../utils/formatPrice';
+import toast from 'react-hot-toast';
 import {
   ResponsiveContainer,
   BarChart,
@@ -25,19 +26,36 @@ export default function AdminDashboard() {
   const [ordersTrend, setOrdersTrend] = useState([]);
 
   useEffect(() => {
+    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
     const run = async () => {
       try {
-        const [u, p, o] = await Promise.all([
+        const [u, p, firstOrdersRes] = await Promise.all([
           api.get('/users'),
-          api.get('/products?limit=200'),
-          api.get('/orders'),
+          api.get('/products?limit=50'),
+          api.get('/orders?limit=100&page=1'),
         ]);
-        const orders = o.data || [];
+
+        /** Admin GET /orders returns { orders, total, pages, page }; user array is only for customer role */
+        let allOrders = [];
+        const ob = firstOrdersRes.data;
+        if (Array.isArray(ob)) {
+          allOrders = ob;
+        } else {
+          const pages = Math.max(1, Number(ob?.pages) || 1);
+          allOrders = [...(ob?.orders ?? [])];
+          for (let page = 2; page <= pages; page += 1) {
+            const { data: body } = await api.get(`/orders?limit=100&page=${page}`);
+            const chunk = Array.isArray(body) ? body : body?.orders ?? [];
+            allOrders = allOrders.concat(chunk);
+          }
+        }
+
         const products = p.data?.products || [];
-        const revenue = orders.reduce((sum, order) => sum + (Number(order.totalPrice) || 0), 0);
+        const revenue = allOrders.reduce((sum, order) => sum + (Number(order.totalPrice) || 0), 0);
         const statusCount = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => ({
           label: status,
-          value: orders.filter((order) => order.status === status).length,
+          value: allOrders.filter((order) => order.status === status).length,
         }));
         const categoryCountMap = products.reduce((acc, product) => {
           const name = product.category?.name || 'Uncategorized';
@@ -48,7 +66,7 @@ export default function AdminDashboard() {
           .map(([label, value]) => ({ label, value }))
           .sort((a, b) => b.value - a.value)
           .slice(0, 5);
-        const monthMap = orders.reduce((acc, order) => {
+        const monthMap = allOrders.reduce((acc, order) => {
           const date = new Date(order.createdAt);
           const label = date.toLocaleString('en-US', { month: 'short' });
           if (!acc[label]) acc[label] = { label, orders: 0, revenue: 0 };
@@ -56,19 +74,27 @@ export default function AdminDashboard() {
           acc[label].revenue += Number(order.totalPrice) || 0;
           return acc;
         }, {});
-        const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const trendData = Object.values(monthMap).sort((a, b) => monthOrder.indexOf(a.label) - monthOrder.indexOf(b.label));
 
+        const userList = Array.isArray(u.data) ? u.data : u.data?.users || [];
+        const productTotal =
+          typeof p.data?.total === 'number' ? p.data.total : products.length;
+
+        const orderTotalCount = !Array.isArray(ob) && typeof ob?.total === 'number' ? ob.total : allOrders.length;
+
         setStats({
-          users: (u.data && u.data.length) || 0,
-          products: (p.data && p.data.total) || 0,
-          orders: orders.length,
+          users: userList.length,
+          products: productTotal,
+          orders: orderTotalCount,
           revenue,
         });
         setOrderStatus(statusCount);
         setCategorySplit(categoryData);
         setOrdersTrend(trendData);
-      } catch (_) {}
+      } catch (err) {
+        console.error('Admin dashboard load failed', err);
+        toast.error(err.response?.data?.message || 'Could not load dashboard stats. Check API & login.');
+      }
     };
     run();
   }, []);
