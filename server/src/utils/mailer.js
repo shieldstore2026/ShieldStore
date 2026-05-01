@@ -3,17 +3,14 @@ import nodemailer from 'nodemailer';
 
 let transporter;
 
-/** Force IPv4 for SMTP on hosts where IPv6 targets are unreachable (Render free tier). */
-function lookupIpv4(hostname, _options, cb) {
-  dns.lookup(hostname, { family: 4, all: false }, cb);
-}
+/** Nodemailer’s `lookup` option is unreliable in some Node versions — still resolves AAAA → ENETUNREACH on Render. */
 
 const SMTP_TIMEOUT_MS = Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 55_000;
 const SMTP_RETRIES = Math.min(8, Math.max(1, Number(process.env.SMTP_RETRY_ATTEMPTS) || 4));
 
 function isRetriableSmtp(err) {
   const msg = String(err?.message || err?.code || '');
-  return /timeout|timed out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|socket|Connection closed|Tarpitting/i.test(
+  return /ENETUNREACH|EHOSTUNREACH|timeout|timed out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|socket|Connection closed|Tarpitting/i.test(
     msg
   );
 }
@@ -22,7 +19,12 @@ function resetTransport() {
   transporter = null;
 }
 
-function getTransporter() {
+function lookupIpv4(hostname, _options, cb) {
+  dns.lookup(hostname, { family: 4, all: false }, cb);
+}
+
+/** Resolve Gmail to a literal IPv4 and connect there; tls.servername must stay smtp.gmail.com for the cert CN. */
+async function buildTransporter() {
   if (transporter) return transporter;
   const host = (process.env.SMTP_HOST || '').trim();
   const port = Number(process.env.SMTP_PORT || 587);
@@ -54,14 +56,21 @@ function getTransporter() {
   const gmailTls = { ...commonTls, servername: 'smtp.gmail.com' };
 
   if (isGmail && user && pass) {
+    let connectHost = 'smtp.gmail.com';
+    try {
+      const { address } = await dns.promises.lookup('smtp.gmail.com', { family: 4 });
+      connectHost = address;
+      console.info('[mailer] Gmail SMTP IPv4:', connectHost, '(TLS SNI smtp.gmail.com)');
+    } catch (dnsErr) {
+      console.warn('[mailer] IPv4 DNS lookup failed, hostname fallback:', dnsErr.message);
+    }
     transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: connectHost,
       port: 587,
       secure: false,
       requireTLS: true,
       auth: { user, pass },
       tls: gmailTls,
-      lookup: lookupIpv4,
       ...timeouts,
     });
   } else if (service) {
@@ -78,7 +87,10 @@ function getTransporter() {
       port,
       secure: port === 465,
       auth: { user, pass },
-      tls: commonTls,
+      tls:
+        /\./.test(host) && !/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.test(host)
+          ? { ...commonTls, servername: host }
+          : commonTls,
       lookup: lookupIpv4,
       ...timeouts,
     });
@@ -133,7 +145,7 @@ async function sendMailViaSmtp({ from, mergedBcc, to, subject, text, html, reply
   let lastErr;
   for (let attempt = 0; attempt < SMTP_RETRIES; attempt += 1) {
     if (attempt > 0) resetTransport();
-    const tx = getTransporter();
+    const tx = await buildTransporter();
     if (!tx) return false;
 
     try {
