@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/formatPrice';
 import toast from 'react-hot-toast';
+import { compressPaymentScreenshot } from '../utils/compressScreenshot';
+import { getApiOrigin } from '../utils/apiOrigin';
 
 const PAYMENT_QR_SRC = '/payment-upi-qr.png';
 const FASHION_HINTS = ['fashion', 'cloth', 'wear', 'hoodie', 'tshirt', 'shirt', 'pant', 'shoe'];
@@ -49,12 +51,20 @@ export default function Checkout() {
       toast.error('Screenshot size should be less than 2MB');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPaymentScreenshot(String(reader.result || ''));
-      setPaymentScreenshotName(file.name);
-    };
-    reader.readAsDataURL(file);
+    (async () => {
+      try {
+        const compressed = await compressPaymentScreenshot(file);
+        setPaymentScreenshot(compressed);
+        setPaymentScreenshotName(file.name.replace(/\.[^.]+$/, '') + '.jpg');
+      } catch (_) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPaymentScreenshot(String(reader.result || ''));
+          setPaymentScreenshotName(file.name);
+        };
+        reader.readAsDataURL(file);
+      }
+    })();
   };
 
   const handleSubmit = async (e) => {
@@ -73,6 +83,11 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
+      if (paymentScreenshot.length > 1_600_000) {
+        toast.error('Screenshot still too large after compression — try another image.');
+        setLoading(false);
+        return;
+      }
       const orderItems = items.map((i) => ({ product: i.product._id, qty: i.qty }));
       const { data: order } = await api.post('/orders', {
         orderItems,
@@ -101,7 +116,7 @@ export default function Checkout() {
         // esewa: { productCode: 'EPAYTEST', amount: cartTotal }
       });
       clearCart();
-      toast.success('Order placed successfully. We sent your invoice to email.');
+      toast.success('Order placed successfully. Invoice is being emailed (check spam if needed).');
       navigate('/order-success?orderId=' + order._id);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Checkout failed');

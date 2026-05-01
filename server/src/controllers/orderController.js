@@ -13,11 +13,15 @@ export const create = async (req, res, next) => {
       return res.status(400).json({ message: 'Missing order items or customer details' });
     }
 
+    const uniqueIds = [...new Set(orderItems.map((item) => String(item.product)))];
+    const dbProducts = await Product.find({ _id: { $in: uniqueIds } }).populate('category', 'slug name');
+    const byId = new Map(dbProducts.map((p) => [String(p._id), p]));
+
     let itemsPrice = 0;
     const resolvedItems = [];
     let requiresShipping = false;
     for (const item of orderItems) {
-      const product = await Product.findById(item.product).populate('category', 'slug name');
+      const product = byId.get(String(item.product));
       if (!product) return res.status(400).json({ message: `Product not found: ${item.product}` });
       const catSlug = String(product.category?.slug || '').toLowerCase();
       const catName = String(product.category?.name || '').toLowerCase();
@@ -74,17 +78,25 @@ export const create = async (req, res, next) => {
     order.invoiceNumber = `INV-${new Date().getFullYear()}-${String(order._id).slice(-6).toUpperCase()}`;
     await order.save();
 
-    try {
-      const { html, text } = buildInvoiceEmail({ order, invoiceNumber: order.invoiceNumber });
-      await sendMail({
-        to: shippingAddress.email,
-        subject: `Shield Invoice ${order.invoiceNumber}`,
-        html,
-        text,
-      });
-    } catch (mailErr) {
-      console.error('Invoice email failed:', mailErr.message);
-    }
+    const invoiceTo = shippingAddress.email;
+    const invoiceNumber = order.invoiceNumber;
+    const orderForMail = typeof order.toObject === 'function' ? order.toObject() : { ...order };
+    Promise.resolve()
+      .then(async () => {
+        try {
+          const { html, text } = buildInvoiceEmail({ order: orderForMail, invoiceNumber });
+          await sendMail({
+            to: invoiceTo,
+            subject: `Shield Invoice ${invoiceNumber}`,
+            html,
+            text,
+          });
+        } catch (mailErr) {
+          console.error('Invoice email failed:', mailErr.message);
+        }
+      })
+      .catch(() => {});
+
     res.status(201).json(order);
   } catch (err) {
     next(err);
@@ -154,22 +166,27 @@ export const updateStatus = async (req, res, next) => {
       await order.save();
 
       const shouldNotifyCustomer = ['delivered', 'cancelled'].includes(status);
-      if (status !== previousStatus && shouldNotifyCustomer && order.shippingAddress?.email) {
-        try {
-          const customerName = order.shippingAddress?.fullName || 'Customer';
-          const orderRef = order.invoiceNumber || order._id;
-          const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-          const statusColor = status === 'delivered' ? '#166534' : '#991b1b';
-          const statusBg = status === 'delivered' ? '#dcfce7' : '#fee2e2';
-          await sendMail({
-            to: order.shippingAddress.email,
-            subject: `Order ${orderRef} status: ${statusLabel}`,
-            html: `<div style="background:#f5f7fb;padding:20px 12px;font-family:Arial,sans-serif;color:#111827;"><div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;"><div style="background:#111827;color:#ffffff;padding:16px 18px;"><h2 style="margin:0;font-size:18px;">Order Status Update</h2></div><div style="padding:18px;"><p style="margin:0 0 12px 0;">Hi ${customerName},</p><p style="margin:0 0 12px 0;">Your order <strong>${orderRef}</strong> has been updated.</p><p style="display:inline-block;margin:2px 0 12px 0;padding:7px 12px;border-radius:999px;background:${statusBg};color:${statusColor};font-weight:700;">${statusLabel}</p><p style="margin:10px 0 0 0;color:#6b7280;">Thank you for shopping with The Shield Store.</p></div></div></div>`,
-            text: `Hi ${customerName}, your order ${orderRef} status is now ${statusLabel}. Thank you for shopping with The Shield Store.`,
-          });
-        } catch (mailErr) {
-          console.error('Order status email failed:', mailErr.message);
-        }
+      const notifyEmail = order.shippingAddress?.email;
+      if (status !== previousStatus && shouldNotifyCustomer && notifyEmail) {
+        const customerName = order.shippingAddress?.fullName || 'Customer';
+        const orderRef = order.invoiceNumber || order._id;
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+        const statusColor = status === 'delivered' ? '#166534' : '#991b1b';
+        const statusBg = status === 'delivered' ? '#dcfce7' : '#fee2e2';
+        Promise.resolve()
+          .then(async () => {
+            try {
+              await sendMail({
+                to: notifyEmail,
+                subject: `Order ${orderRef} status: ${statusLabel}`,
+                html: `<div style="background:#f5f7fb;padding:20px 12px;font-family:Arial,sans-serif;color:#111827;"><div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;"><div style="background:#111827;color:#ffffff;padding:16px 18px;"><h2 style="margin:0;font-size:18px;">Order Status Update</h2></div><div style="padding:18px;"><p style="margin:0 0 12px 0;">Hi ${customerName},</p><p style="margin:0 0 12px 0;">Your order <strong>${orderRef}</strong> has been updated.</p><p style="display:inline-block;margin:2px 0 12px 0;padding:7px 12px;border-radius:999px;background:${statusBg};color:${statusColor};font-weight:700;">${statusLabel}</p><p style="margin:10px 0 0 0;color:#6b7280;">Thank you for shopping with The Shield Store.</p></div></div></div>`,
+                text: `Hi ${customerName}, your order ${orderRef} status is now ${statusLabel}. Thank you for shopping with The Shield Store.`,
+              });
+            } catch (mailErr) {
+              console.error('Order status email failed:', mailErr.message);
+            }
+          })
+          .catch(() => {});
       }
     }
     res.json(order);
