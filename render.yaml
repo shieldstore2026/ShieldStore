@@ -52,7 +52,7 @@ services:
 
   - type: web
     name: shield-web
-    plan: free
+    # Static sites are free; do not set plan: free (invalid for runtime: static in Blueprint)
     rootDir: client
     runtime: static
     buildCommand: npm install && npm run build
