@@ -4,11 +4,12 @@ let transporter;
 
 function getTransporter() {
   if (transporter) return transporter;
-  const host = process.env.SMTP_HOST;
+  const host = (process.env.SMTP_HOST || '').trim();
   const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const service = process.env.SMTP_SERVICE;
+  const user = (process.env.SMTP_USER || '').trim();
+  const rawPass = process.env.SMTP_PASS || '';
+  const pass = rawPass.replace(/\s+/g, '');
+  const service = (process.env.SMTP_SERVICE || '').trim();
   if (!user || !pass || (!host && !service)) {
     console.warn(
       '[mailer] SMTP disabled: set SMTP_USER, SMTP_PASS, and either SMTP_SERVICE (e.g. gmail) or SMTP_HOST + SMTP_PORT'
@@ -18,12 +19,12 @@ function getTransporter() {
 
   transporter = nodemailer.createTransport(
     service
-      ? { service, auth: { user, pass: pass.replace(/\s+/g, '') } }
+      ? { service, auth: { user, pass } }
       : {
           host,
           port,
           secure: port === 465,
-          auth: { user, pass: pass.replace(/\s+/g, '') },
+          auth: { user, pass },
         }
   );
   return transporter;
@@ -34,12 +35,18 @@ export async function sendMail({ to, subject, html, text }) {
   if (!tx) {
     return false;
   }
-  await tx.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to,
-    subject,
-    text,
-    html,
-  });
-  return true;
+  try {
+    await tx.sendMail({
+      from: (process.env.SMTP_FROM || process.env.SMTP_USER || '').trim(),
+      to,
+      subject,
+      text,
+      html,
+    });
+    console.info(`[mailer] sent OK to=${to} subject=${String(subject).slice(0, 60)}`);
+    return true;
+  } catch (err) {
+    console.error('[mailer] sendMail failed:', err.message, err.response ?? '');
+    throw err;
+  }
 }
