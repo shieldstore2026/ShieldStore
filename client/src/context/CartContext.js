@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
 const CART_KEY = 'shield-cart';
 
 export function CartProvider({ children }) {
+  const { user } = useAuth();
   const [items, setItems] = useState(() => {
     try {
       const stored = localStorage.getItem(CART_KEY);
@@ -19,6 +21,7 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const addItem = (product, qty = 1) => {
+    if (!user) return false;
     setItems((prev) => {
       const existing = prev.find((i) => i.product._id === product._id);
       if (existing) {
@@ -28,6 +31,7 @@ export function CartProvider({ children }) {
       }
       return [...prev, { product, qty }];
     });
+    return true;
   };
 
   const updateQty = (productId, qty) => {
@@ -56,6 +60,7 @@ export function CartProvider({ children }) {
         updateQty,
         removeItem,
         clearCart,
+        canUseCart: !!user,
       }}
     >
       {children}

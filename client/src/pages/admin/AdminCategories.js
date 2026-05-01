@@ -65,11 +65,13 @@ export default function AdminCategories() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">Categories & Subcategories</h1>
-      <p className="text-slate-600 mb-6">Add categories and subcategories using the forms below.</p>
+      <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-emerald-900 to-cyan-900 text-white">
+        <h1 className="text-2xl font-bold mb-1">Category Builder</h1>
+        <p className="text-emerald-100">Organize your store with clear categories and nested subcategories.</p>
+      </div>
 
       {/* Add Category form */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-6">
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 p-4 shadow-sm mb-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-3">Add Category</h2>
         <form onSubmit={handleAddCategory} className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
@@ -89,7 +91,7 @@ export default function AdminCategories() {
       </div>
 
       {/* Add Subcategory form */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-6">
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 p-4 shadow-sm mb-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-3">Add Subcategory</h2>
         <form onSubmit={handleAddSubcategory} className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[140px]">
@@ -122,7 +124,7 @@ export default function AdminCategories() {
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">

@@ -53,21 +53,21 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md p-8 rounded-2xl border border-dark-700 dark:bg-dark-900 shadow-xl">
-        <h1 className="font-display text-2xl font-bold text-neon-cyan mb-1">Admin sign in</h1>
-        <p className="text-sm dark:text-gray-500 mb-6">Staff and administrators only.</p>
+    <div className="min-h-[70vh] flex items-center justify-center px-4 bg-surface-950">
+      <div className="w-full max-w-md p-8 rounded-2xl border border-surface-700 bg-surface-800 shadow-card-hover">
+        <h1 className="font-display text-2xl font-bold text-neutral-100 mb-1">Admin sign in</h1>
+        <p className="text-sm text-neutral-500 mb-6">Staff and administrators only.</p>
 
-        <div className="mb-6 p-4 rounded-xl bg-dark-800 border border-dark-700">
-          <p className="text-sm font-medium dark:text-gray-300 mb-1">Demo credentials (after seed)</p>
-          <p className="text-xs dark:text-gray-500 mb-2">Email: <code className="bg-dark-700 px-1 rounded">{DEMO_EMAIL}</code> · Password: <code className="bg-dark-700 px-1 rounded">{DEMO_PASSWORD}</code></p>
-          <p className="text-xs dark:text-gray-500 mb-2">If login fails, run in server folder: <code className="bg-dark-700 px-1 rounded">npm run seed</code></p>
-          <button type="button" onClick={fillDemo} className="text-xs text-neon-cyan hover:underline">Fill in demo credentials</button>
+        <div className="mb-6 p-4 rounded-2xl bg-surface-900 border border-surface-700">
+          <p className="text-sm font-medium text-neutral-300 mb-1">Demo credentials (after seed)</p>
+          <p className="text-xs text-neutral-500 mb-2">Email: <code className="bg-surface-700 px-1.5 py-0.5 rounded">{DEMO_EMAIL}</code> · Password: <code className="bg-surface-700 px-1.5 py-0.5 rounded">{DEMO_PASSWORD}</code></p>
+          <p className="text-xs text-neutral-500 mb-2">If login fails, run in server folder: <code className="bg-surface-700 px-1.5 py-0.5 rounded">npm run seed</code></p>
+          <button type="button" onClick={fillDemo} className="text-xs text-accent hover:text-accent-light transition-colors">Fill in demo credentials</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="admin-email" className="block text-sm font-medium dark:text-gray-300 mb-1.5">Email</label>
+            <label htmlFor="admin-email" className="block text-sm font-medium text-neutral-300 mb-1.5">Email</label>
             <input
               id="admin-email"
               type="email"
@@ -76,11 +76,11 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="input-ring w-full px-4 py-2.5 rounded-lg border border-dark-700 dark:bg-dark-800 dark:text-gray-200"
+              className="input-ring w-full px-4 py-2.5 rounded-xl border border-surface-700 bg-surface-900 text-neutral-100 placeholder:text-neutral-500"
             />
           </div>
           <div>
-            <label htmlFor="admin-password" className="block text-sm font-medium dark:text-gray-300 mb-1.5">Password</label>
+            <label htmlFor="admin-password" className="block text-sm font-medium text-neutral-300 mb-1.5">Password</label>
             <input
               id="admin-password"
               type="password"
@@ -89,17 +89,17 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="input-ring w-full px-4 py-2.5 rounded-lg border border-dark-700 dark:bg-dark-800 dark:text-gray-200"
+              className="input-ring w-full px-4 py-2.5 rounded-xl border border-surface-700 bg-surface-900 text-neutral-100 placeholder:text-neutral-500"
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3 bg-neon-orange text-black font-bold rounded-lg">
+          <button type="submit" disabled={loading} className="btn-primary w-full py-3 bg-accent text-black font-semibold rounded-xl hover:bg-accent-light transition-colors">
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <p className="mt-6 text-sm dark:text-gray-500">
-          <Link to="/" className="text-neon-cyan hover:underline">← Back to store</Link>
+        <p className="mt-6 text-sm text-neutral-500">
+          <Link to="/" className="text-accent hover:text-accent-light transition-colors">← Back to store</Link>
           {' · '}
-          <Link to="/login" className="text-neon-cyan hover:underline">Customer login</Link>
+          <Link to="/login" className="text-accent hover:text-accent-light transition-colors">Customer login</Link>
         </p>
       </div>
     </div>

@@ -72,7 +72,7 @@ cd ../client && npm install
 - Set at least:
   - `MONGODB_URI` – MongoDB connection string (e.g. `mongodb://localhost:27017/shield-ecommerce`)
   - `JWT_SECRET` – Secret for JWT (use a strong value in production)
-  - `FRONTEND_URL` – Frontend URL (e.g. `http://localhost:3000`) for CORS and redirects
+  - `FRONTEND_URL` – Frontend URL(s) for CORS and redirects (e.g. `http://localhost:3000`). Use commas to allow multiple origins (production + preview).
 - Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` for Google OAuth; `ESEWA_CLIENT_ID`, `ESEWA_SECRET_KEY` for eSewa.
 
 ### 4. Seed database (required for admin)
@@ -139,7 +139,9 @@ Your computer and the app must stay running (and the tunnel terminal open) while
 
 ### 8. Deploy to production
 
-See **[DEPLOY.md](./DEPLOY.md)** for step-by-step deployment using **Vercel** (frontend), **Render** (backend), and **MongoDB Atlas** (database)—all with free tiers.
+See **[DEPLOY.md](./DEPLOY.md)** for **Vercel** (frontend), **Render** (backend), **MongoDB Atlas**, env vars, and troubleshooting.
+
+**Before building the client for production:** set `REACT_APP_API_URL` to your API base URL (see `client/.env.example`).
 
 ### 9. Build for production
 

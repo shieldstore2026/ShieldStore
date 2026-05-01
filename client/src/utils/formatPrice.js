@@ -1,8 +1,8 @@
 /**
- * Format price for display. NPR (Nepali Rupees) shows as RS. xxx, else $xxx.xx
+ * Format price for display in NPR for entire storefront.
  */
-export function formatPrice(price, currency = 'USD') {
+export function formatPrice(price) {
   const num = Number(price);
-  if (currency === 'NPR') return `RS.${num % 1 === 0 ? num : num.toFixed(2)}`;
-  return `$${num.toFixed(2)}`;
+  const safe = Number.isFinite(num) ? num : 0;
+  return `Rs ${safe % 1 === 0 ? safe : safe.toFixed(2)}`;
 }

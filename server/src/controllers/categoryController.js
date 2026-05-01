@@ -1,7 +1,7 @@
 import Category from '../models/Category.js';
 
 /**
- * GET /api/categories - List all categories (public). Optional ?tree=1 for nested structure.
+  * GET /api/categories - List all categories (public). Optional ?tree=1 for nested structure.
  */
 export const list = async (req, res, next) => {
   try {

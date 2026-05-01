@@ -7,12 +7,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = () =>
+    api.get('/auth/me').then(({ data }) => {
+      setUser(data);
+      return data;
+    });
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      api
-        .get('/auth/me')
-        .then(({ data }) => setUser(data))
+      refreshUser()
         .catch(() => {
           localStorage.removeItem('token');
           setUser(null);
@@ -25,10 +29,7 @@ export function AuthProvider({ children }) {
 
   const loginWithToken = (token) => {
     localStorage.setItem('token', token);
-    return api.get('/auth/me').then(({ data }) => {
-      setUser(data);
-      return data;
-    });
+    return refreshUser();
   };
 
   const logout = () => {
@@ -43,6 +44,8 @@ export function AuthProvider({ children }) {
         user,
         loading,
         loginWithToken,
+        refreshUser,
+        setUser,
         logout,
         isAdmin: user?.role === 'admin',
       }}

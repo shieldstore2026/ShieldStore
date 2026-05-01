@@ -1,42 +1,65 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const footerCols = [
-  { title: 'Get to Know Us', links: [{ to: '/', label: 'About Shield' }, { to: '/products', label: 'Careers' }, { to: '/products', label: 'Press' }] },
-  { title: 'Make Money with Us', links: [{ to: '/products', label: 'Sell on Shield' }, { to: '/products', label: 'Advertise' }] },
-  { title: 'Let Us Help You', links: [{ to: '/orders', label: 'Returns & Orders' }, { to: '/', label: 'Shipping' }, { to: '/', label: 'Help' }] },
+  { title: 'Company', links: [{ to: '/about', label: 'About Shield' }, { to: '/products', label: 'Careers' }, { to: '/products', label: 'Press' }] },
+  { title: 'Sell', links: [{ to: '/products', label: 'Sell on Shield' }, { to: '/products', label: 'Advertise' }] },
+  { title: 'Support', links: [{ to: '/orders', label: 'Returns & Orders' }, { to: '/contact', label: 'Contact us' }, { to: '/', label: 'Help' }] },
 ];
+
+const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+const item = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
 
 export default function Footer() {
   return (
-    <footer className="mt-auto dark:bg-dark-900 border-t border-dark-700">
-      <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full py-3 dark:bg-dark-800 dark:hover:bg-dark-700 text-neon-cyan font-medium text-sm transition-colors">
+    <motion.footer
+      className="mt-auto bg-gradient-to-b from-surface-900 to-surface-950 border-t border-surface-700/90"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.35 }}
+    >
+      <motion.button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="w-full py-3.5 bg-surface-800 text-neutral-400 hover:text-accent font-medium text-sm transition-colors"
+        whileTap={{ scale: 0.99 }}
+      >
         Back to top
-      </button>
-      <div className="max-w-[1600px] mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      </motion.button>
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10"
+          variants={container}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+        >
           {footerCols.map((col) => (
-            <div key={col.title}>
-              <h3 className="font-display font-semibold text-neon-cyan mb-3">{col.title}</h3>
-              <ul className="space-y-2">
+            <motion.div key={col.title} variants={item}>
+              <h3 className="font-display font-semibold text-accent text-sm uppercase tracking-wider mb-4">{col.title}</h3>
+              <ul className="space-y-2.5">
                 {col.links.map(({ to, label }) => (
-                  <li key={label}><Link to={to} className="text-sm dark:text-gray-400 hover:text-neon-cyan hover:underline">{label}</Link></li>
+                  <li key={label}>
+                    <Link to={to} className="text-sm text-neutral-400 hover:text-accent transition-colors">{label}</Link>
+                  </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
-          <div>
-            <h3 className="font-display font-semibold text-neon-cyan mb-3">Shield</h3>
-            <p className="text-sm dark:text-gray-400">Gaming & electronics store. Dark theme, neon vibes.</p>
-          </div>
-        </div>
-        <div className="mt-8 pt-6 border-t border-dark-700 flex flex-wrap justify-center items-center gap-4 text-xs dark:text-gray-500">
-          <Link to="/" className="hover:text-neon-cyan">Conditions of Use</Link>
-          <Link to="/" className="hover:text-neon-cyan">Privacy Notice</Link>
-          <Link to="/admin/login" className="hover:text-neon-cyan opacity-80">Admin</Link>
-          <span>© {new Date().getFullYear()} Shield, Inc.</span>
+          <motion.div variants={item}>
+            <h3 className="font-display font-semibold text-accent text-sm uppercase tracking-wider mb-4">Shield</h3>
+            <p className="text-sm text-neutral-500 leading-relaxed">Free Fire diamonds & subscriptions. Best rates, fast delivery.</p>
+          </motion.div>
+        </motion.div>
+        <div className="mt-10 pt-8 border-t border-surface-700 flex flex-wrap justify-center items-center gap-6 text-xs text-neutral-500">
+          <Link to="/" className="hover:text-accent transition-colors">Conditions of Use</Link>
+          <Link to="/" className="hover:text-accent transition-colors">Privacy</Link>
+          <Link to="/admin" className="opacity-70 hover:opacity-100 hover:text-accent transition-colors">Admin</Link>
+          <span>© {new Date().getFullYear()} Shield</span>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

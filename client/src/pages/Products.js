@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../api/axios';
 import ProductCard from '../components/ProductCard';
 import Breadcrumbs from '../components/Breadcrumbs';
+
+const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+const item = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,92 +55,94 @@ export default function Products() {
   const categoryName = category ? (categories.find((c) => c._id === category || c.slug === category)?.name || 'Products') : search ? `"${search}"` : 'All Products';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Breadcrumbs items={[
         { to: '/', label: 'Home' },
         ...(category ? [{ to: '/products', label: 'Products' }, { label: categoryName }] : search ? [{ to: '/products', label: 'Products' }, { label: `Search: ${search}` }] : [{ label: 'Products' }]),
       ]} />
       <div className="flex flex-col md:flex-row gap-6">
-      <aside className="w-full md:w-56 flex-shrink-0">
-        <div className="rounded-xl border border-dark-700 dark:bg-dark-900 p-4 sticky top-24">
-          <h3 className="font-display text-neon-cyan mb-3">Categories</h3>
-          <button
-            type="button"
-            onClick={() => setFilter('category', '')}
-            className={`block w-full text-left py-1.5 px-2 rounded-lg text-sm ${!category ? 'bg-neon-cyan/20 text-neon-cyan' : 'dark:text-gray-400 hover:text-neon-cyan'}`}
-          >
-            All
-          </button>
-          {displayCategories.map((c) => (
+        <aside className="w-full md:w-52 flex-shrink-0">
+          <div className="rounded-2xl border border-surface-700 bg-surface-800 p-4 sticky top-24">
+            <h3 className="font-display text-sm font-semibold text-neutral-100 uppercase tracking-wider mb-3">Categories</h3>
             <button
-              key={c._id}
               type="button"
-              onClick={() => setFilter('category', c.slug || c._id)}
-              className={`block w-full text-left py-1.5 px-2 rounded-lg text-sm ${(category === c._id || category === c.slug) ? 'bg-neon-cyan/20 text-neon-cyan' : 'dark:text-gray-400 hover:text-neon-cyan'} ${c.parent ? 'pl-4' : ''}`}
+              onClick={() => setFilter('category', '')}
+              className={`block w-full text-left py-2 px-3 rounded-xl text-sm transition-colors ${!category ? 'bg-accent/20 text-accent font-medium' : 'text-neutral-400 hover:text-accent'}`}
             >
-              {c.parent ? '↳ ' : ''}{c.name}
+              All
             </button>
-          ))}
-        </div>
-      </aside>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <h1 className="font-display text-xl text-neon-cyan">{categoryName}</h1>
-          <div className="flex items-center gap-3">
-            {!loading && total > 0 && <span className="text-sm dark:text-gray-500">{((page - 1) * 12) + 1}-{Math.min(page * 12, total)} of {total} results</span>}
-            <select
-            value={sort}
-            onChange={(e) => setFilter('sort', e.target.value)}
-            className="px-3 py-2 rounded-lg border border-dark-700 dark:bg-dark-800 dark:text-gray-200 text-sm"
-          >
-            <option value="">Newest</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            </select>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-72 bg-dark-800 animate-pulse rounded-xl" />
+            {displayCategories.map((c) => (
+              <button
+                key={c._id}
+                type="button"
+                onClick={() => setFilter('category', c.slug || c._id)}
+                className={`block w-full text-left py-2 px-3 rounded-xl text-sm transition-colors ${(category === c._id || category === c.slug) ? 'bg-accent/20 text-accent font-medium' : 'text-neutral-400 hover:text-accent'} ${c.parent ? 'pl-5' : ''}`}
+              >
+                {c.parent ? '↳ ' : ''}{c.name}
+              </button>
             ))}
           </div>
-        ) : products.length === 0 ? (
-          <p className="dark:text-gray-500 py-12">No products found.</p>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((p) => (
-                <ProductCard key={p._id} product={p} />
+        </aside>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <h1 className="font-display text-xl font-semibold text-neutral-100">{categoryName}</h1>
+            <div className="flex items-center gap-3">
+              {!loading && total > 0 && <span className="text-sm text-neutral-500">{((page - 1) * 12) + 1}-{Math.min(page * 12, total)} of {total}</span>}
+              <select
+                value={sort}
+                onChange={(e) => setFilter('sort', e.target.value)}
+                className="px-3 py-2 rounded-xl border border-surface-700 bg-surface-800 text-neutral-200 text-sm focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
+              >
+                <option value="">Newest</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="min-h-[20rem] bg-surface-800 animate-pulse rounded-2xl" />
               ))}
             </div>
-            {pages > 1 && (
-              <div className="flex justify-center gap-2 mt-8">
-                <button
-                  type="button"
-                  disabled={page <= 1}
-                  onClick={() => setSearchParams((p) => { p.set('page', page - 1); return p; })}
-                  className="px-4 py-2 rounded-lg border border-dark-700 dark:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed hover:border-neon-cyan"
-                >
-                  Prev
-                </button>
-                <span className="flex items-center px-4 dark:text-gray-400">Page {page} of {pages}</span>
-                <button
-                  type="button"
-                  disabled={page >= pages}
-                  onClick={() => setSearchParams((p) => { p.set('page', page + 1); return p; })}
-                  className="px-4 py-2 rounded-lg border border-dark-700 dark:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed hover:border-neon-cyan"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
+          ) : products.length === 0 ? (
+            <p className="text-neutral-500 py-12">No products found.</p>
+          ) : (
+            <>
+              <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4" variants={container} initial="hidden" animate="visible">
+                {products.map((p) => (
+                  <motion.div key={p._id} variants={item} className="w-full h-full min-h-0 flex">
+                    <ProductCard product={p} />
+                  </motion.div>
+                ))}
+              </motion.div>
+              {pages > 1 && (
+                <div className="flex justify-center gap-2 mt-8">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setSearchParams((p) => { p.set('page', page - 1); return p; })}
+                    className="px-4 py-2.5 rounded-xl border border-surface-700 bg-surface-800 text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed hover:border-accent/50 transition-colors"
+                  >
+                    Prev
+                  </button>
+                  <span className="flex items-center px-4 text-neutral-400 text-sm">Page {page} of {pages}</span>
+                  <button
+                    type="button"
+                    disabled={page >= pages}
+                    onClick={() => setSearchParams((p) => { p.set('page', page + 1); return p; })}
+                    className="px-4 py-2.5 rounded-xl border border-surface-700 bg-surface-800 text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed hover:border-accent/50 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 }

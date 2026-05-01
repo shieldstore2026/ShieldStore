@@ -3,19 +3,28 @@
 @tailwind utilities;
 
 body {
-  @apply antialiased font-body;
+  @apply antialiased font-body text-neutral-200 bg-surface-950;
+}
+
+::selection {
+  background: rgba(255, 157, 0, 0.35);
+  color: #fff;
 }
 
 html.dark {
-  @apply bg-dark-950 text-gray-200;
+  @apply bg-surface-950 text-neutral-200;
 }
 
 html.light {
-  @apply bg-gray-100 text-gray-900;
+  @apply bg-neutral-100 text-neutral-800;
 }
 
 html {
   @apply transition-colors duration-300;
+}
+
+a {
+  @apply transition-colors duration-200;
 }
 
 .dark ::-webkit-scrollbar {
@@ -24,27 +33,81 @@ html {
 }
 
 .dark ::-webkit-scrollbar-track {
-  @apply bg-dark-900;
+  @apply bg-surface-900;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  @apply bg-neon-cyan/30 rounded-full;
+  @apply bg-surface-600 rounded-full;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  @apply bg-neon-cyan/50;
+  @apply bg-accent/50;
 }
 
-/* Professional form controls: focus ring for accessibility */
 .input-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 dark:focus:ring-offset-dark-950;
+  @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface-950;
 }
 
 .btn-primary {
-  @apply focus:outline-none focus:ring-2 focus:ring-neon-orange focus:ring-offset-2 dark:focus:ring-offset-dark-950 disabled:opacity-60 disabled:cursor-not-allowed;
+  @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface-950 disabled:opacity-60 disabled:cursor-not-allowed;
 }
 
-/* Skip to main content for keyboard/screen reader */
 .skip-link {
-  @apply absolute left-4 top-4 -translate-y-16 bg-neon-cyan text-black font-bold px-4 py-2 rounded-lg z-[100] focus:translate-y-0 transition-transform;
+  @apply absolute left-4 top-4 -translate-y-16 bg-accent text-black font-bold px-4 py-2 rounded-xl z-[100] focus:translate-y-0 transition-transform;
+}
+
+/* Accessibility: text size */
+html.a11y-text-sm { font-size: 87.5%; }
+html.a11y-text-default { font-size: 100%; }
+html.a11y-text-lg { font-size: 112.5%; }
+html.a11y-text-xl { font-size: 125%; }
+
+/* Accessibility: reduce motion */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Accessibility: high contrast */
+html.a11y-high-contrast body { @apply text-neutral-100; }
+html.a11y-high-contrast a { @apply font-semibold; }
+html.a11y-high-contrast button,
+html.a11y-high-contrast [role="button"] { @apply border-2 border-neutral-400; }
+
+/* Accessibility: underline links */
+html.a11y-links-underline a { text-decoration: underline; }
+html.a11y-links-underline a:hover { text-decoration: underline; }
+
+/* Accessibility: readable font mode */
+html.a11y-readable-font body,
+html.a11y-readable-font input,
+html.a11y-readable-font button,
+html.a11y-readable-font select,
+html.a11y-readable-font textarea {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+/* Accessibility: line height */
+html.a11y-line-height-lg body,
+html.a11y-line-height-lg p,
+html.a11y-line-height-lg li,
+html.a11y-line-height-lg label {
+  line-height: 1.9 !important;
+}
+
+/* Accessibility: grayscale mode */
+html.a11y-grayscale {
+  filter: grayscale(100%);
+}
+
+/* Accessibility: larger target sizes */
+html.a11y-large-targets button,
+html.a11y-large-targets a,
+html.a11y-large-targets [role='button'],
+html.a11y-large-targets input[type='checkbox'],
+html.a11y-large-targets input[type='radio'] {
+  min-height: 44px;
 }

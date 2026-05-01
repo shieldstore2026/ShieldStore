@@ -1,0 +1,70 @@
+# Shield — Render Blueprint (free tier): Node API + static React app
+#
+# 1. Push this repo to GitHub/GitLab/Bitbucket.
+# 2. Render Dashboard → New → Blueprint → connect repo → Deploy.
+# 3. When prompted, set MONGODB_URI (MongoDB Atlas M0 URI), JWT_SECRET only if overriding).
+#    Set BACKEND_URL = your shield-api external URL (https://….onrender.com).
+#    Set FRONTEND_URL = your shield-web external URL (same format, no trailing slash).
+#
+# MongoDB Atlas: Network Access → 0.0.0.0/0 so Render can reach the cluster.
+#
+# If the static build runs before the API URL exists: redeploy shield-web once shield-api is live.
+#
+services:
+  - type: web
+    name: shield-api
+    plan: free
+    rootDir: server
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BACKEND_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      # Optional email / OAuth (set in Dashboard if you use them)
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SMTP_SERVICE
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+
+  - type: web
+    name: shield-web
+    plan: free
+    rootDir: client
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Baked into the React build — points SPA at your API host.
+      - key: REACT_APP_API_URL
+        fromService:
+          name: shield-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL

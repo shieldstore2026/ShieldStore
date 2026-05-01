@@ -2,8 +2,11 @@
  * Fetch-based API client (no axios). Same interface: api.get(), api.post(), api.put(), api.delete()
  */
 
-const PRODUCTION_API = 'https://shieldstore.onrender.com';
-const baseURL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && !/localhost|127\.0\.0\.1/.test(window.location.host) ? PRODUCTION_API : '');
+/**
+ * Production: set REACT_APP_API_URL on your host (e.g. Vercel) before build — no trailing slash.
+ * Local dev: leave unset to use CRA proxy → http://localhost:5000
+ */
+const baseURL = process.env.REACT_APP_API_URL || '';
 const apiRoot = baseURL ? `${baseURL}/api` : '/api';
 
 function getHeaders() {

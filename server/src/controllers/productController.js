@@ -10,6 +10,7 @@ export const list = async (req, res, next) => {
     const search = (req.query.search || '').trim();
     const category = req.query.category;
     const featured = req.query.featured === 'true';
+    const hotDeal = req.query.hotDeal === 'true';
     const sort = req.query.sort || '-createdAt';
 
     const filter = req.user?.role === 'admin' ? {} : { active: true };
@@ -25,6 +26,7 @@ export const list = async (req, res, next) => {
       }
     }
     if (featured) filter.featured = true;
+    if (hotDeal) filter.hotDeal = true;
     if (search) filter.$text = { $search: search };
 
     const query = search ? Product.find(filter, { score: { $meta: 'textScore' } }).sort({ score: { $meta: 'textScore' } }) : Product.find(filter).sort(sort);
@@ -58,14 +60,14 @@ export const create = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ message: errors.array().map((e) => e.msg).join('. ') });
-      const { name, description, price, compareAtPrice, discountPercent, image, images, category, stock, featured, active, currency } = req.body;
+      const { name, description, price, compareAtPrice, discountPercent, image, images, category, stock, featured, hotDeal, active, currency } = req.body;
       const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now();
       const product = await Product.create({
         name: name.trim(),
         slug,
         description,
         price,
-        currency: currency || 'USD',
+        currency: currency || 'NPR',
         compareAtPrice,
         discountPercent: discountPercent != null ? Math.min(100, Math.max(0, Number(discountPercent))) : undefined,
         image,
@@ -73,6 +75,7 @@ export const create = [
         category,
         stock: stock ?? 0,
         featured: !!featured,
+        hotDeal: !!hotDeal,
         active: active !== false,
       });
       res.status(201).json(product);
@@ -86,7 +89,7 @@ export const update = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    const { name, description, price, compareAtPrice, discountPercent, image, images, category, stock, featured, active, currency } = req.body;
+    const { name, description, price, compareAtPrice, discountPercent, image, images, category, stock, featured, hotDeal, active, currency } = req.body;
     if (name) product.name = name.trim();
     if (description !== undefined) product.description = description;
     if (price !== undefined) product.price = price;
@@ -98,6 +101,7 @@ export const update = async (req, res, next) => {
     if (category !== undefined) product.category = category;
     if (stock !== undefined) product.stock = stock;
     if (featured !== undefined) product.featured = !!featured;
+    if (hotDeal !== undefined) product.hotDeal = !!hotDeal;
     if (active !== undefined) product.active = !!active;
     await product.save();
     res.json(product);

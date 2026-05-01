@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const WishlistContext = createContext(null);
 
 const WISHLIST_KEY = 'shield-wishlist';
 
 export function WishlistProvider({ children }) {
+  const { user } = useAuth();
   const [productIds, setProductIds] = useState(() => {
     try {
       const stored = localStorage.getItem(WISHLIST_KEY);
@@ -21,13 +23,17 @@ export function WishlistProvider({ children }) {
   const isInWishlist = (id) => productIds.includes(id);
 
   const toggleWishlist = (id) => {
+    if (!user) return false;
     setProductIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+    return true;
   };
 
   const addToWishlist = (id) => {
+    if (!user) return false;
     if (!productIds.includes(id)) setProductIds((prev) => [...prev, id]);
+    return true;
   };
 
   const removeFromWishlist = (id) => {
@@ -43,6 +49,7 @@ export function WishlistProvider({ children }) {
         toggleWishlist,
         addToWishlist,
         removeFromWishlist,
+        canUseWishlist: !!user,
       }}
     >
       {children}

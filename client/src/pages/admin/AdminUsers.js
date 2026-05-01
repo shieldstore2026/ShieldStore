@@ -24,9 +24,11 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">Users</h1>
-      <p className="text-slate-600 mb-6">Manage user roles.</p>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-fuchsia-900 to-indigo-900 text-white">
+        <h1 className="text-2xl font-bold mb-1">User Access Control</h1>
+        <p className="text-fuchsia-100">Promote trusted members and manage admin permissions safely.</p>
+      </div>
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead><tr className="bg-slate-50 border-b border-slate-200">

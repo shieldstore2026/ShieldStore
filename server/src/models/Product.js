@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, lowercase: true },
     description: { type: String },
     price: { type: Number, required: true, min: 0 },
-    currency: { type: String, default: 'USD', trim: true },
+    currency: { type: String, default: 'NPR', trim: true },
     compareAtPrice: { type: Number, min: 0 },
     discountPercent: { type: Number, min: 0, max: 100 },
     image: { type: String },
@@ -14,6 +14,7 @@ const productSchema = new mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     stock: { type: Number, required: true, min: 0, default: 0 },
     featured: { type: Boolean, default: false },
+    hotDeal: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
   },
   { timestamps: true }
