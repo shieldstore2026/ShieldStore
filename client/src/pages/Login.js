@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { getGoogleAuthHref } from '../utils/apiOrigin';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -34,14 +35,24 @@ export default function Login() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isLocal =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal && !process.env.REACT_APP_API_URL) {
+      toast.error(
+        'Production missing REACT_APP_API_URL — set it on shield-web and redeploy.',
+        { id: 'missing-api-url' }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (user) navigate(from, { replace: true });
   }, [user, from, navigate]);
 
   if (user) return null;
 
-  const apiBase = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-  const frontend = encodeURIComponent(window.location.origin);
-  const googleUrl = `${apiBase || ''}/api/auth/google?frontend=${frontend}`;
+  const googleUrl = getGoogleAuthHref();
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -79,8 +90,15 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
           <a
-            href={googleUrl}
-            className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl border border-surface-600 text-neutral-200 hover:border-accent hover:text-accent transition-colors"
+            href={googleUrl || '#'}
+            aria-disabled={!googleUrl}
+            onClick={(e) => {
+              if (!googleUrl) {
+                e.preventDefault();
+                toast.error('Configure REACT_APP_API_URL on the static host and redeploy.');
+              }
+            }}
+            className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl border border-surface-600 text-neutral-200 hover:border-accent hover:text-accent transition-colors ${!googleUrl ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <span>G</span>
             <span>Continue with Google</span>

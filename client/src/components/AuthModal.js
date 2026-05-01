@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { getGoogleAuthHref } from '../utils/apiOrigin';
 import toast from 'react-hot-toast';
 
 export default function AuthModal({ mode = 'login', onClose, onSwitch }) {
@@ -13,9 +14,7 @@ export default function AuthModal({ mode = 'login', onClose, onSwitch }) {
   const [confirm, setConfirm] = useState('');
   const isLogin = mode === 'login';
 
-  const apiBase = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-  const frontend = encodeURIComponent(window.location.origin);
-  const googleUrl = `${apiBase || ''}/api/auth/google?frontend=${frontend}`;
+  const googleUrl = getGoogleAuthHref();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,7 +56,16 @@ export default function AuthModal({ mode = 'login', onClose, onSwitch }) {
           <button type="submit" disabled={loading} className="btn-primary w-full py-3 bg-accent text-black font-semibold rounded-xl hover:bg-accent-light transition-colors disabled:opacity-70">
             {loading ? (isLogin ? 'Signing in…' : 'Creating account…') : (isLogin ? 'Sign in' : 'Create account')}
           </button>
-          <a href={googleUrl} className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl border border-surface-600 text-neutral-200 hover:border-accent hover:text-accent transition-colors">
+          <a
+            href={googleUrl || '#'}
+            onClick={(e) => {
+              if (!googleUrl) {
+                e.preventDefault();
+                toast.error('Configure REACT_APP_API_URL on the static host and redeploy.');
+              }
+            }}
+            className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl border border-surface-600 text-neutral-200 hover:border-accent hover:text-accent transition-colors ${!googleUrl ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
             <span>G</span>
             <span>{isLogin ? 'Continue with Google' : 'Sign up with Google'}</span>
           </a>
